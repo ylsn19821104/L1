@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.l1.dao.ItemDao">
+
+	<resultMap type="Item" id="ItemResult">
+		<result property="id" column="id"/>
+		<result property="name" column="name"/>
+		<result property="code" column="code"/>
+		<result property="stat" column="stat"/>
+		<result property="statName" column="statName"/>
+		<result property="brandId" column="brandId"/>
+		<result property="brandName" column="brandName"/>
+		
+		<result property="create_by" column="create_by"/>
+		<result property="create_time" column="create_time"/>
+		<result property="update_by" column="update_by"/>
+		<result property="update_time" column="update_time"/>
+		
+		
+		<result property="primaryCategoryId" column="primaryCategoryId"/>
+		<result property="primaryCategoryName" column="primaryCategoryName"/>
+		<result property="minorCategoryId" column="minorCategoryId"/>
+		<result property="minorCategoryName" column="minorCategoryName"/>
+		
+		
+		<result property="rental1" column="rental1"/>
+		<result property="rental2" column="rental2"/>
+		<result property="deposit" column="deposit"/>
+		<result property="style" column="style"/>
+		<result property="color" column="color"/>
+		<result property="colorName" column="colorName"/>		
+		
+		<result property="size" column="size"/>		
+		<result property="sizeName" column="sizeName"/>		
+				
+				
+		
+		<!-- 
+		<association property="brand" column="brandId" select="com.com.dao.BrandDao.findById"></association>
+		 -->
+	</resultMap>
+	
+	<select id="findById" parameterType="int" resultMap="ItemResult">
+		select * from tb_item where id=#{id}
+	</select>
+	
+	<select id="find" parameterType="map" resultMap="ItemResult">
+       select  i.id,i.name,i.style,i.stat,i.code,i.create_time,i.create_by,i.update_time,i.update_by,i.brandId,i.deposit,i.primaryCategoryId,i.minorCategoryId,i.rental1,i.rental2,i.color,i.size ,
+        d.statName,b.name as brandName,mc.name as minorCategoryName,pc.name as primaryCategoryName
+       from tb_item i
+        LEFT JOIN  (SELECT valueField,textField statName FROM tb_dic WHERE keyWord='itemStatus') d ON i.stat = d.valueField
+        LEFT JOIN  tb_brand b ON  i.brandId = b.id
+        LEFT  JOIN tb_minor_category mc on mc.id = i.minorCategoryId
+        LEFT  JOIN tb_primary_category pc on pc.id = i.primaryCategoryId
+
+		<where>
+			<if test="name!=null and name!='' ">
+				and i.name like concat('%',#{name},'%')
+			</if>
+			<if test="stat!=null and stat!='' ">
+				and i.stat = #{stat}
+			</if>
+			<if test="code!=null and code!='' ">
+                and i.code like concat('%',#{code},'%')
+			</if>
+		</where>
+		<if test="start!=null and size!=null">
+			limit #{start},#{size}
+		</if>
+	</select>
+	
+	<select id="findNamesByIds"  resultType="String">
+		select name from tb_item
+		<where>
+		    id in 
+		    <foreach item="item" index="index" collection="array"   
+                         open="(" separator="," close=")">  
+                        #{item}  
+            </foreach>
+		</where>
+	</select>
+	
+	<select id="getTotal" parameterType="Map" resultType="Long">
+		select count(*) from tb_item
+		<where>
+			<if test="name!=null and name!='' ">
+				and name like #{name}
+			</if>
+		</where>
+	</select>
+	
+	<insert id="add" useGeneratedKeys="true" keyProperty="id" parameterType="Item">
+		insert into tb_item(name,style,stat,code,create_time,create_by,brandId,deposit,primaryCategoryId,minorCategoryId,rental1,rental2,color,size)
+		values(#{name},#{style},#{stat},#{code},#{create_time},#{create_by},#{brandId},#{deposit},#{primaryCategoryId},#{minorCategoryId},#{rental1},#{rental2},#{color},#{size})
+	</insert>
+	
+	<update id="update" parameterType="Item">
+		update tb_item
+		<set>
+			<if test="name!=null and name!='' ">
+				name=#{name},
+			</if>
+			<if test="stat!=null and stat!='' ">
+				stat=#{stat},
+			</if>
+			
+			<if test="code!=null and code!='' ">
+				code=#{code},
+			</if>
+			
+			<if test="update_time!=null">
+				update_time=#{update_time},
+			</if>
+			<if test="brandId!=null and brandId!='' ">
+				brandId=#{brandId},
+			</if>
+
+			<if test="primaryCategoryId!=null and primaryCategoryId!='' ">
+				primaryCategoryId=#{primaryCategoryId},
+			</if>
+			
+
+			<if test="minorCategoryId!=null and minorCategoryId!='' ">
+				minorCategoryId=#{minorCategoryId},
+			</if>
+			
+
+			
+			<if test="rental1!=null and rental1!='' ">
+				rental1=#{rental1},
+			</if>
+			
+			<if test="rental2!=null and rental2!='' ">
+				rental2=#{rental2},
+			</if>
+			
+			<if test="deposit!=null and deposit!='' ">
+				deposit=#{deposit},
+			</if>
+			
+			<if test="style!=null and style!='' ">
+				style=#{style},
+			</if>
+			
+			<if test="color!=null and color!='' ">
+				color=#{color},
+			</if>
+
+			<if test="size!=null and size!='' ">
+				size=#{size},
+			</if>
+			
+		</set>
+		where id=#{id}
+	</update>
+	
+	<delete id="delete">
+		update tb_item set stat=0 where id in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</delete>
+
+    <delete id="deleteById" parameterType="Integer">
+        update tb_item set stat=0 where id=#{id}
+    </delete>
+	
+</mapper> 

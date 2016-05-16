@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.l1.dao.RentDtlDao">
+
+	<resultMap type="RentDtl" id="RentDtlResult">
+		<result property="id" column="id"/>
+		<result property="rentId" column="rentId"/>
+		<result property="skuId" column="skuId"/>
+		<result property="itemName" column="itemName"/>
+		<result property="colorName" column="colorName"/>
+		<result property="sizeName" column="sizeName"/>
+		<result property="itemPrice" column="itemPrice"/>
+		<result property="itemAmount" column="itemAmount"/>
+		<result property="itemRent" column="itemRent"/>
+		<result property="itemRepo" column="itemRepo"/>
+
+	</resultMap>
+	
+	<insert id="add" parameterType="RentDtl" keyProperty="id" keyColumn="id" useGeneratedKeys="true">
+		insert into tb_rentdtl(rentId,skuId,itemPrice,itemAmount,itemRent,itemRepo)
+		values(#{rentId},#{skuId},#{itemPrice},#{itemAmount},#{itemRent},#{itemRepo})
+	</insert>
+	<insert id="batchSave" parameterType="list">
+		insert into tb_rentdtl(rentId,skuId,itemPrice,itemAmount,itemRent,itemRepo)
+		values
+		<foreach item="item" index="index" collection="list"  separator=",">
+			(#{item.rentId},#{item.skuId},#{item.itemPrice},#{item.itemAmount},#{item.itemRent},#{item.itemRepo})
+		</foreach>
+	</insert>
+
+	<update id="update" parameterType="RentDtl">
+		update tb_rentdtl
+		<set>
+			itemPrice=#{itemPrice},
+			itemAmount=#{itemAmount},
+			itemRent=#{itemRent},
+			itemRepo=#{itemRepo}
+		</set>
+		where id=#{id}
+	</update>
+	
+	<select id="find" parameterType="Map" resultMap="RentDtlResult">
+		SELECT r.*,item.name itemName,color.name colorName,sizedtl.name sizeDtlName
+		FROM tb_rentdtl r
+		LEFT JOIN tb_sku sku ON r.skuId = sku.id
+		LEFT JOIN tb_item item ON sku.itemId = item.id
+		LEFT JOIN tb_color color ON sku.colorId = color.id
+		LEFT JOIN tb_sizedtl sizedtl ON sku.sizeDtlId = sizedtl.id
+		<where>
+			<if test="rentId!=null and rentId!='' ">
+				and rentId = #{rentId}
+			</if>
+			<if test="id!=null and id!='' ">
+				and id= #{id}
+			</if>
+			<if test="stat!=null and stat!='' ">
+				and stat=#{stat}
+			</if>
+		</where>
+		<if test="start!=null and size!=null">
+			limit #{start},#{size}
+		</if>
+	</select>
+	
+	<select id="findByIds" parameterType="string" resultMap="RentDtlResult">
+		select * from tb_rentdtl
+		where id in (#{ids})
+	</select>
+	
+	<select id="findById" parameterType="int" resultMap="RentDtlResult">
+		select * from tb_rentdtl
+		where id =#{id}
+	</select>
+	
+	
+	
+	<select id="getTotal" parameterType="Map" resultType="Long">
+		select count(*) from tb_rentdtl
+		<where>
+			<if test="id!=null and id!='' ">
+				and id =#{id}
+			</if>
+		</where>
+	</select>
+	
+	<delete id="delete">
+		DELETE FROM tb_rentdtl where id IN
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteById" parameterType="int">
+		DELETE FROM tb_rentdtl where id=#{id}
+	</delete>
+	<delete id="deleteByRentId" parameterType="int">
+		DELETE FROM tb_rentdtl where id=#{id}
+	</delete>
+
+	<delete id="deleteByReversionIds">
+		DELETE FROM tb_rentdtl where rentId IN
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+</mapper> 

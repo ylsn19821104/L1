@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.l1.dao.ReversionDtlDao">
+
+	<resultMap type="ReversionDtl" id="ReversionDtlResult">
+		<result property="rentDtlId" column="rentDtlId"/>
+		<result property="reversionId" column="reversionId"/>
+		<result property="skuId" column="skuId"/>
+		<result property="itemName" column="itemName"/>
+		<result property="itemPrice" column="itemPrice"/>
+		<result property="itemAmount" column="itemAmount"/>
+		<result property="colorId" column="colorId"/>
+		<result property="colorName" column="colorName"/>
+		<result property="sizeId" column="sizeId"/>
+		<result property="sizeName" column="sizeName"/>
+		<result property="reversionStat" column="reversionStat"/>
+		<result property="reversionStatName" column="reversionStatName"/>
+		<result property="reversionAmount" column="reversionAmount"/>
+		<result property="itemRent" column="itemRent"/>
+		<result property="itemRepo" column="itemRepo"/>
+		<result property="itemCompensate" column="itemCompensate"/>
+	</resultMap>
+
+	<select id="loadReversionDtlFromRentDtl" resultMap="ReversionDtlResult">
+		SELECT r.id rentDtlId,r.rentId,r.skuId,r.itemPrice,r.itemAmount,r.itemRepo,r.itemRent,
+		item.id itemId,item.name itemName,color.id colorId,color.name colorName,sizedtl.id sizeId,sizedtl.name sizeName
+		FROM tb_rentdtl r
+		LEFT JOIN tb_sku sku ON r.skuId = sku.id
+		LEFT JOIN tb_item item ON sku.itemId = item.id
+		LEFT JOIN tb_color color ON sku.colorId = color.id
+		LEFT JOIN tb_sizedtl sizedtl ON sku.sizeDtlId = sizedtl.id
+		where r.rentId = #{rentId}
+	</select>
+	<select id="findRentDtlsById" resultMap="ReversionDtlResult">
+		SELECT r.*,dic.*,sku.id skuId,item.name itemName,rentdtl.itemAmount,rentdtl.itemPrice,color.name colorName,sizedtl.name sizeName
+		FROM tb_reversiondtl r
+		LEFT JOIN tb_rentdtl rentdtl ON r.rentDtlId = rentdtl.id
+		LEFT JOIN tb_sku sku ON rentdtl.skuId = sku.id
+		LEFT JOIN tb_item item ON sku.itemId = item.id
+		LEFT JOIN tb_color color ON sku.colorId = color.id
+		LEFT JOIN tb_sizedtl sizedtl ON sku.sizeDtlId = sizedtl.id
+		LEFT JOIN (SELECT valueField reversionStat,textField reversionStatName FROM tb_dic WHERE keyWord='reversionStatus') dic
+		 ON r.reversionStat= dic.reversionStat
+		where r.reversionId = #{reversionId}
+	</select>
+	<insert id="batchSave" parameterType="ReversionDtl">
+		insert into tb_reversiondtl(reversionId,rentDtlId, reversionAmount,reversionStat, itemRent, itemRepo, itemCompensate)
+		values
+		<foreach item="item" index="index" collection="list"  separator=",">
+			(#{item.reversionId},#{item.rentDtlId},#{item.reversionAmount},#{item.reversionStat},#{item.itemRent},#{item.itemRepo},#{item.itemCompensate})
+		</foreach>
+	</insert>
+
+	<update id="update" parameterType="ReversionDtl">
+		update tb_returndtl
+		<set>
+			<if test="skuId!=null and skuId!='' ">
+				skuId=#{skuId},
+			</if>
+			
+			<if test="itemName!=null and itemName!='' ">
+				itemName=#{itemName},
+			</if>
+			<if test="itemPrice!=null and itemPrice!='' ">
+				itemPrice=#{itemPrice},
+			</if>
+			<if test="itemAmount!=null and itemAmount!='' ">
+				itemAmount=#{itemAmount},
+			</if>
+			<if test="itemRent!=null">
+				itemRent=#{itemRent},
+			</if>
+			<if test="itemRepo!=null">
+				itemRepo=#{itemRepo},
+			</if>
+			<if test="itemDamage !=null">
+				itemDamage=#{itemDamage},
+			</if>
+			<if test="stat!=null">
+				stat=#{stat},
+			</if>
+			<if test="statName!=null">
+				statName=#{statName},
+			</if>
+			
+			<if test="warehouseId !=null">
+				warehouseId=#{warehouseId},
+			</if>
+			<if test="warehouseName !=null">
+				warehouseName=#{warehouseName},
+			</if>
+			
+		</set>
+		where dtlId=#{dtlId}
+	</update>
+	
+	<select id="find" parameterType="Map" resultMap="ReversionDtlResult">
+		select * from tb_returndtl
+		<where>
+			<if test="rentId!=null and rentId!='' ">
+				and rentId = #{rentId}
+			</if>
+			<if test="dtlId!=null and dtlId!='' ">
+				and dtlId= #{dtlId}
+			</if>
+			<if test="stat!=null and stat!='' ">
+				and stat=#{stat}
+			</if>
+		</where>
+		<if test="start!=null and size!=null">
+			limit #{start},#{size}
+		</if>
+	</select>
+	
+	<select id="findByIds" parameterType="string" resultMap="ReversionDtlResult">
+		select * from tb_returndtl
+		where rentId in (#{ids})
+	</select>
+	
+	<select id="findById" parameterType="int" resultMap="ReversionDtlResult">
+		select * from tb_returndtl
+		where dtlId =#{dtlId}
+	</select>
+	
+	
+	
+	<select id="getTotal" parameterType="Map" resultType="Long">
+		select count(*) from tb_returndtl
+		<where>
+			<if test="rentId!=null and rentId!='' ">
+				and rentId =#{rentId}
+			</if>
+		</where>
+	</select>
+	
+	<delete id="delete">
+		DELETE FROM tb_returndtl where dtlId IN
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteById" parameterType="int">
+		DELETE FROM tb_returndtl where dtlId=#{dtlId}
+	</delete>
+
+	<delete id="deleteByReversionIds">
+		DELETE FROM tb_reversiondtl where reversionId IN
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper> 

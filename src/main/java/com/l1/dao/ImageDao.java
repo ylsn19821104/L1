@@ -1,0 +1,25 @@
+package com.l1.dao;
+
+import com.l1.entity.Image;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+/**
+ * Created by luopotaotao on 2016/5/7.
+ */
+@Repository
+public interface ImageDao {
+    int save(Image image);
+    List<Image> find(@Param("start") Integer start, @Param("rows") Integer rows);
+    Image findById(int id);
+    List<Image> findAll();
+    int update(Image image);
+    int batchUpdate(List<Image> images);
+    int remove(Integer[] ids);
+
+    int queryTotal();
+
+    List<Image> findByIds(Integer[] ids);
+}

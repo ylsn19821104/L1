@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.l1.dao.ImageDao">
+    <resultMap type="image" id="ImageResult">
+        <result column="id" property="id"/>
+        <result column="comment" property="comment"/>
+        <result column="ImgSuffix" property="suffix"/>
+    </resultMap>
+
+    <update id="save" parameterType="image">
+        update tb_sku set
+        hasImage=1 ,
+        comment=#{comment},
+        imgSuffix = #{suffix}
+        where id=#{id}
+
+    </update>
+
+    <select id="queryTotal" resultType="int">
+        SELECT count(*) from tb_sku where hasImage = 1
+    </select>
+
+
+    <select id="find"  resultMap="ImageResult">
+        SELECT id,comment,ImgSuffix from tb_sku
+        where hasImage=true
+        <if test="start!=null and rows!=null">
+            limit #{start},#{rows}
+        </if>
+    </select>
+    <select id="findById" resultMap="ImageResult">
+        select id,comment,ImgSuffix
+        from tb_sku
+        where id = #{id}
+    </select>
+    <select id="findByIds" resultMap="ImageResult">
+        select id,comment,ImgSuffix
+        from tb_sku
+        where id IN
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="findAll" resultMap="ImageResult">
+        select id,comment,ImgSuffix
+        from tb_sku
+        where hasImage is null or hasImage = 0
+    </select>
+    <update id="remove">
+        UPDATE tb_sku SET hasImage = null,imgSuffix=null where id IN
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="update" parameterType="image">
+        UPDATE tb_sku set comment = #{comment}
+        <if test="suffix!=null">
+            ,imgSuffix = #{suffix}
+        </if>
+        WHERE id=#{id}
+    </update>
+</mapper>

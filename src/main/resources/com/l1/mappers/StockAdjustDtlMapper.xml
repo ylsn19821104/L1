@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.l1.dao.StockAdjustDtlDao">
+
+	<resultMap type="StockAdjustDtl" id="StockAdjustDtlResult">
+		<result property="id" column="id"/>
+		<result property="dtlId" column="dtlId"/>
+
+		<result property="skuId" column="skuId"/>
+		<result property="skuName" column="skuName"/>
+        <result property="skuAmount" column="skuAmount"/>
+        <result property="sizeName" column="sizeName"/>
+        <result property="colorName" column="colorName"/>
+
+        <result property="tzAmount" column="tzAmount"/>
+        <result property="amount" column="tzAmount"/>
+
+        <result property="locationId" column="locationId"/>
+        <result property="locationName" column="locationName"/>
+        <result property="warehouseId" column="warehouseId"/>
+        <result property="warehouseName" column="warehouseName"/>
+
+	</resultMap>
+	
+	<insert id="add" parameterType="StockAdjustDtl">
+		insert into tb_stockadjustdtl(dtlid,id,skuId,skuAmount,tzAmount,amount)
+		values(null,#{id},#{skuId},#{skuAmount},#{tzAmount},#{amount})
+	</insert>
+
+    <insert id="batchSave" parameterType="list">
+        insert into tb_stockadjustdtl(dtlid,id,skuId,skuAmount,tzAmount,amount)
+        values
+        <foreach item="item" index="index" collection="list"  separator=",">
+            (null,#{item.id},#{item.skuId},#{item.skuAmount},#{item.tzAmount},#{item.amount})
+        </foreach>
+    </insert>
+	
+	<update id="update" parameterType="StockAdjustDtl">
+		update tb_stockadjustdtl
+		<set>
+			<if test="skuId!=null and skuId!='' ">
+				skuId=#{skuId},
+			</if>
+			<if test="id!=null and id!='' ">
+				id=#{id},
+			</if>
+
+			<if test="skuAmount !=null">
+				skuAmount=#{skuAmount},
+			</if>
+			<if test="tzAmount !=null">
+				tzAmount=#{tzAmount},
+			</if>
+            <if test="amount !=null">
+                amount=#{amount},
+            </if>
+
+		</set>
+		where dtlId=#{dtlId}
+	</update>
+	
+	<select id="find" parameterType="Map" resultMap="StockAdjustDtlResult">
+		SELECT tk.dtlid,tk.id,tk.skuId,tk.skuAmount,tk.tzAmount,tk.amount,
+		sku.text AS skuName,sku.sizeName,sku.colorName
+		FROM tb_stockadjustdtl tk
+        LEFT JOIN
+        (select sku.id,sku.text,size.name sizeName,color.name colorName from tb_sku sku left join tb_sizedtl size on sku.sizeDtlId=size.id
+         left join tb_color color on sku.colorId=color.id ) sku
+        on tk.skuId= sku.id
+		<where>
+			<if test="id!=null and id!='' ">
+				and tk.id = #{id}
+			</if>
+			<if test="dtlId!=null and dtlId!='' ">
+				and dtlId= #{dtlId}
+			</if>
+		</where>
+		<if test="start!=null and size!=null">
+			limit #{start},#{size}
+		</if>
+	</select>
+	
+	<select id="findByIds" parameterType="string" resultMap="StockAdjustDtlResult">
+		SELECT tk.dtlid,tk.id,tk.skuId,tk.skuAmount,tk.tzAmount,tk.amount,
+		sku.text AS skuName,sku.sizeName,sku.colorName
+		FROM tb_stockadjustdtl tk
+        LEFT JOIN
+        (select sku.id,sku.text,size.name sizeName,color.name colorName from tb_sku sku left join tb_sizedtl size on sku.sizeDtlId=size.id
+         left join tb_color color on sku.colorId=color.id ) sku
+        on tk.skuId= sku.id
+		where tk.id in (#{ids})
+	</select>
+	
+	<select id="findById" parameterType="int" resultMap="StockAdjustDtlResult">
+		SELECT tk.dtlid,tk.id,tk.skuId,tk.skuAmount,tk.tzAmount,tk.amount,
+		sku.text AS skuName,sku.sizeName,sku.colorName
+		FROM tb_stockadjustdtl tk
+        LEFT JOIN
+        (select sku.id,sku.text,size.name sizeName,color.name colorName from tb_sku sku left join tb_sizedtl size on sku.sizeDtlId=size.id
+         left join tb_color color on sku.colorId=color.id ) sku
+        on tk.skuId= sku.id
+		where tk.id =#{id}
+	</select>
+	
+	
+	
+	<select id="getTotal" parameterType="Map" resultType="Long">
+		select count(*) from tb_stockadjustdtl
+		<where>
+			<if test="id!=null and id!='' ">
+				and id =#{id}
+			</if>
+		</where>
+	</select>
+	
+	<delete id="delete">
+		DELETE FROM tb_stockadjustdtl where dtlId IN
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteById" parameterType="int">
+		DELETE FROM tb_stockadjustdtl where dtlId=#{dtlId}
+	</delete>
+
+
+    <delete id="deleteByKctzId" parameterType="int">
+        DELETE FROM tb_stockadjustdtl where id=#{id}
+    </delete>
+</mapper> 

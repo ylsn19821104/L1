@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.l1.dao.StockInDao">
+
+    <resultMap type="StockIn" id="StockInResult">
+        <result property="id" column="id"/>
+        <result property="billNo" column="billNo"/>
+        <result property="billStat" column="billStat"/>
+        <result property="billStatName" column="billStatName"/>
+        <result property="stockOutBillId" column="stockOutBillId"/>
+        <result property="stockOutBillNo" column="stockOutBillNo"/>
+        <result property="stockOutWarehouseId" column="stockOutWarehouseId"/>
+        <result property="stockOutWarehouseName" column="stockOutWarehouseName"/>
+        <result property="stockInWarehouseId" column="stockInWarehouseId"/>
+        <result property="stockInWarehouseName" column="stockInWarehouseName"/>
+        <result property="billDate" column="billDate"/>
+        <result property="totalStockIn" column="totalStockIn"/>
+        <result property="create_by" column="create_by"/>
+        <result property="update_by" column="update_by"/>
+        <result property="create_time" column="create_time"/>
+        <result property="update_time" column="update_time"/>
+    </resultMap>
+
+    <sql id="v_stockIn">
+		SELECT
+              stock.*,w_o.name stockOutWarehouseName,w_i.name StockInWarehouseName,d.textField billStatName,stock_out.billNo stockOutBillNo
+          FROM tb_stockin stock
+            LEFT JOIN tb_stockout stock_out ON stock_out.id = stock.stockOutBillId
+            LEFT JOIN tb_warehouse w_o ON stock.StockOutWarehouseId = w_o.id
+            LEFT JOIN tb_warehouse w_i ON stock.StockInWarehouseId = w_i.id
+            LEFT JOIN (SELECT valueField, textField FROM tb_dic WHERE keyWord = 'stockInStatus') d ON stock.billStat = d.valueField
+	</sql>
+
+    <select id="loadAvailableStockOutBillNos" resultType="map">
+		SELECT id,billNo FROM tb_stockOut WHERE billStat=1 and id not in(SELECT stockOutBillId FROM tb_stockIn)
+	</select>
+    <select id="loadStockInFromStockOut" resultMap="StockInResult">
+		SELECT
+		      stock.id stockOutBillId,0 billStat,stock.billNo stockOutBillNo,stockOutWarehouseId,stockInWarehouseId,totalStockOut,w_o.name stockOutWarehouseName,w_i.name stockInWarehouseName,'未审核' billStatName
+		      from tb_stockOut stock
+		      LEFT JOIN tb_warehouse w_o  ON stock.stockOutWarehouseId = w_o.id
+		      LEFT JOIN tb_warehouse w_i  ON stock.stockInWarehouseId = w_i.id
+        where stock.id = #{stockOutId}
+    </select>
+    <select id="find" resultMap="StockInResult">
+        <include refid="v_stockIn"/>
+        <where>
+            <if test="name!=null and name!='' ">
+                and name like #{name}
+            </if>
+            <if test="code!=null and code!='' ">
+                and code like #{code}
+            </if>
+            <if test="stat!=null and stat!='' ">
+                and stat=#{stat}
+            </if>
+        </where>
+        <if test="start!=null and size!=null">
+            limit #{start},#{size}
+        </if>
+    </select>
+
+    <select id="loadStockInDtlsFromStockOutDtl" resultType="map">
+        SELECT r.*,item.name itemName,color.name colorName,sizedtl.name sizeDtlName
+		FROM tb_stockOutdtl r
+		LEFT JOIN tb_sku sku ON r.skuId = sku.id
+		LEFT JOIN tb_item item ON sku.itemId = item.id
+		LEFT JOIN tb_color color ON sku.colorId = color.id
+		LEFT JOIN tb_sizedtl sizedtl ON sku.sizeDtlId = sizedtl.id
+		WHERE r.stockOutId = #{stockOutId}
+    </select>
+
+    <insert id="save" parameterType="StockIn" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		insert into tb_stockIn(
+		  billNo,billStat, stockOutBillId, stockOutWarehouseId, stockInWarehouseId, billDate,
+		  totalStockIn)
+		values(
+		#{billNo},#{billStat},#{stockOutBillId},#{stockOutWarehouseId},#{stockInWarehouseId},#{billDate},
+		#{totalStockIn})
+	</insert>
+
+    <update id="update" parameterType="StockIn">
+        update tb_return
+        <set>
+            <if test="billNo!=null and billNo!='' ">
+                billNo=#{billNo},
+            </if>
+
+            <if test="customerName!=null and customerName!='' ">
+                customerName=#{customerName},
+            </if>
+
+            <if test="warehouseId!=null and warehouseId!='' ">
+                warehouseId=#{warehouseId},
+            </if>
+            <if test="warehouseName!=null and warehouseName!='' ">
+                warehouseName=#{warehouseName},
+            </if>
+            <if test="stat!=null and stat!='' ">
+                stat=#{stat},
+            </if>
+            <if test="statName!=null and statName!='' ">
+                statName=#{statName},
+            </if>
+            <if test="update_time!=null">
+                update_time=#{update_time},
+            </if>
+            <if test="customerPhone!=null">
+                customerPhone=#{customerPhone},
+            </if>
+            <if test="customerAddr!=null">
+                customerAddr=#{customerAddr},
+            </if>
+            <if test="customerCard!=null">
+                customerCard=#{customerCard},
+            </if>
+            <if test="stockOutDay!=null">
+                stockOutDay=#{stockOutDay},
+            </if>
+
+            <if test="repoMoney!=null">
+                repoMoney=#{repoMoney},
+            </if>
+            <if test="stockOutMoney!=null">
+                stockOutMoney=#{stockOutMoney},
+            </if>
+
+            <if test="damageMoney !=null">
+                damageMoney=#{damageMoney},
+            </if>
+            <if test="beginDate!=null">
+                beginDate=#{beginDate},
+            </if>
+            <if test="endDate!=null">
+                endDate=#{endDate},
+            </if>
+            <if test="expressBillNo!=null">
+                expressBillNo=#{expressBillNo},
+            </if>
+
+            <if test="stockOutBillNo !=null">
+                stockOutBillNo=#{stockOutBillNo},
+            </if>
+            <if test="supplierId!=null">
+                supplierId=#{supplierId},
+            </if>
+        </set>
+        where id=#{stockOutId}
+    </update>
+
+    <!--<select id="find" parameterType="Map" resultMap="StockInResult">-->
+    <!--select * from tb_return-->
+    <!--<where>-->
+    <!--<if test="name!=null and name!='' ">-->
+    <!--and name like #{name}-->
+    <!--</if>-->
+    <!--<if test="code!=null and code!='' ">-->
+    <!--and code like #{code}-->
+    <!--</if>-->
+    <!--<if test="stat!=null and stat!='' ">-->
+    <!--and stat=#{stat}-->
+    <!--</if>-->
+    <!--</where>-->
+    <!--<if test="start!=null and size!=null">-->
+    <!--limit #{start},#{size}-->
+    <!--</if>-->
+    <!--</select>-->
+
+    <select id="findByIds" parameterType="string" resultMap="StockInResult">
+		select * from tb_return
+		where stockOutId in (#{ids})
+	</select>
+
+    <select id="findById" parameterType="int" resultMap="StockInResult">
+		select * from tb_return
+		where stockOutId =#{stockOutId}
+	</select>
+
+
+    <select id="getTotal" parameterType="Map" resultType="Long">
+        select count(*) from tb_return
+        <where>
+            <if test="name!=null and name!='' ">
+                and name like #{name}
+            </if>
+            <if test="code!=null and code!='' ">
+                and code like #{code}
+            </if>
+        </where>
+    </select>
+
+    <delete id="remove">
+        DELETE FROM tb_stockIn where id IN
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="deleteById" parameterType="int">
+		DELETE FROM tb_return where id=#{stockOutId}
+	</delete>
+
+    <update id="finish">
+        UPDATE tb_stockIn set billStat = 1 WHERE id IN
+        <foreach collection="array" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="unfinish">
+        UPDATE tb_stockIn set billStat = 0 WHERE id IN
+        <foreach collection="array" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+</mapper> 
